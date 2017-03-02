@@ -24,6 +24,11 @@ PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
 FIND_GATVE = re.compile(r'(.*?)\sg\.$')
 FIND_ALEJA = re.compile(r'(.*?)\s\bal\b.$')
 FIND_AIKSTE = re.compile(r'(.*?)\sa\.$')
+FIND_AKLIGATVIS = re.compile(r'(.*?)\s\baklg\b.$')
+FIND_KELIAS = re.compile(r'(.*?)\s\bkel\b.$')
+FIND_PLENTAS = re.compile(r'(.*?)\s\bpl\b.$')
+FIND_PROSPEKTAS = re.compile(r'(.*?)\s\bpr\b.$')
+FIND_SKERSGATVIS = re.compile(r'(.*?)\s\bskg\b.$')
  
 SCHEMA = schema.schema
  
@@ -91,7 +96,7 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                     way_tag['key'] = child.attrib['k'].split(':',1)[1]
                     way_tag['id'] = element.attrib['id']
                     way_tag['value'] = fix_streets(child.attrib['v'])
-                    print way_tag['value']
+                    print way_tag['value'] #Checking if it works
                     tags.append(way_tag)
                 elif PROBLEMCHARS.match(child.attrib['k']):
                     continue
@@ -125,6 +130,16 @@ def fix_streets(attribute):
         return attribute.replace('al.', 'alėja'.decode("utf-8"))
     elif FIND_AIKSTE.match(attribute):
         return attribute.replace('a.', 'aikštė'.decode("utf-8"))
+    elif FIND_AKLIGATVIS.match(attribute):
+        return attribute.replace('aklg.', 'akligatvis')
+    elif FIND_KELIAS.match(attribute):
+        return attribute.replace('kel.', 'kelias')
+    elif FIND_PLENTAS.match(attribute):
+        return attribute.replace('pl.', 'plentas')
+    elif FIND_PROSPEKTAS.match(attribute):
+        return attribute.replace('pr.', 'prospektas')
+    elif FIND_SKERSGATVIS.match(attribute):
+        return attribute.replace('skg.', 'skersgatvis')
     else:
         return attribute
 
