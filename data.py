@@ -21,7 +21,9 @@ WAY_TAGS_PATH = "ways_tags.csv"
  
 LOWER_COLON = re.compile(r'^([a-z]|_)+:([a-z]|_)+')
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
-CHANGE_STREET = re.compile(r'/([\w\s])*g\.$/g')
+FIND_GATVE = re.compile(r'(.*?)\sg\.$')
+FIND_ALEJA = re.compile(r'(.*?)\s\bal\b.$')
+FIND_AIKSTE = re.compile(r'(.*?)\sa\.$')
  
 SCHEMA = schema.schema
  
@@ -57,7 +59,7 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                 node_tag['key'] = child.attrib['k'].split(':',1)[1]
                 node_tag['id'] = element.attrib['id']
                 node_tag['value'] = fix_streets(child.attrib['v'])
-                print node_tag['value']
+
                 tags.append(node_tag)
 
             elif PROBLEMCHARS.match(child.attrib['k']):
@@ -67,7 +69,8 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                 node_tag['type'] = 'regular'
                 node_tag['key'] = child.attrib['k']
                 node_tag['id'] = element.attrib['id']
-                node_tag['value'] = child.attrib['v']
+                node_tag['value'] = fix_streets(child.attrib['v'])
+
                 tags.append(node_tag)
        
         return {'node': node_attribs, 'node_tags': tags}
@@ -87,7 +90,8 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                     way_tag['type'] = child.attrib['k'].split(':',1)[0]
                     way_tag['key'] = child.attrib['k'].split(':',1)[1]
                     way_tag['id'] = element.attrib['id']
-                    way_tag['value'] = child.attrib['v']
+                    way_tag['value'] = fix_streets(child.attrib['v'])
+                    print way_tag['value']
                     tags.append(way_tag)
                 elif PROBLEMCHARS.match(child.attrib['k']):
                     continue
@@ -96,7 +100,7 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                     way_tag['type'] = 'regular'
                     way_tag['key'] = child.attrib['k']
                     way_tag['id'] = element.attrib['id']
-                    way_tag['value'] = child.attrib['v']
+                    way_tag['value'] = fix_streets(child.attrib['v'])
                     tags.append(way_tag)
                    
             elif child.tag == 'nd':
@@ -113,9 +117,14 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
 # ================================================== #
 #               Helper Functions                     #
 # ================================================== #
+#This function takes an attribute of a node, of way, then checks it against RegEx and if it matches, it will replace the words.
 def fix_streets(attribute):
-    if attribute.find('g.') >= 1:
+    if FIND_GATVE.match(attribute):
         return attribute.replace('g.', 'gatvė'.decode("utf-8"))
+    elif FIND_ALEJA.match(attribute):
+        return attribute.replace('al.', 'alėja'.decode("utf-8"))
+    elif FIND_AIKSTE.match(attribute):
+        return attribute.replace('a.', 'aikštė'.decode("utf-8"))
     else:
         return attribute
 

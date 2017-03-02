@@ -3,7 +3,7 @@ from collections import defaultdict
 import re
 import pprint
 
-OSMFILE = "vilniussample.osm"
+OSMFILE = "vilniusmap.osm"
 street_type_re = re.compile(r'\b\S+\.?$', re.IGNORECASE)
 
 
@@ -54,7 +54,7 @@ def update_name(name, mapping):
 
 def test():
     st_types = audit(OSMFILE)
-    pprint.pprint(st_types)
+    pprint.pprint(dict(st_types))
 
 
 test()
