@@ -12,13 +12,15 @@ import cerberus
 import schema
  
 OSM_PATH = "vilniusmap.osm"
- 
+
+#These are the locations my csv files will be stored in
 NODES_PATH = "nodes.csv"
 NODE_TAGS_PATH = "nodes_tags.csv"
 WAYS_PATH = "ways.csv"
 WAY_NODES_PATH = "ways_nodes.csv"
 WAY_TAGS_PATH = "ways_tags.csv"
- 
+
+#Created regex variables to match my values to
 LOWER_COLON = re.compile(r'^([a-z]|_)+:([a-z]|_)+')
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
 FIND_GATVE = re.compile(r'(.*?)\sg\.$')
@@ -43,53 +45,39 @@ WAY_NODES_FIELDS = ['id', 'node_id', 'position']
 def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIELDS,
                   problem_chars=PROBLEMCHARS, default_tag_type='regular'):
     """Clean and shape node or way XML element to Python dict"""
- 
     node_attribs = {}
     way_attribs = {}
     way_nodes = []
     tags = []  # Handle secondary tags the same way for both node and way elements
- 
-    # YOUR CODE HERE
     if element.tag == 'node':
         for attrib in element.attrib:
             if attrib in NODE_FIELDS:
                 node_attribs[attrib] = element.attrib[attrib]
-       
         for child in element:
             node_tag = {}
-
-            if LOWER_COLON.match(child.attrib['k']):
-
+            if LOWER_COLON.match(child.attrib['k']): #Checks if the child attribute "key" matches the regex.
                 node_tag['type'] = child.attrib['k'].split(':',1)[0]
                 node_tag['key'] = child.attrib['k'].split(':',1)[1]
                 node_tag['id'] = element.attrib['id']
-                node_tag['value'] = fix_streets(child.attrib['v'])
-
+                node_tag['value'] = fix_streets(child.attrib['v']) #References helper function that fixes streets
                 tags.append(node_tag)
-
-            elif PROBLEMCHARS.match(child.attrib['k']):
+            elif PROBLEMCHARS.match(child.attrib['k']): #If there are problemchars in the child attribute, then skip it.
                 continue
-
             else:
                 node_tag['type'] = 'regular'
                 node_tag['key'] = child.attrib['k']
                 node_tag['id'] = element.attrib['id']
                 node_tag['value'] = fix_streets(child.attrib['v'])
-
                 tags.append(node_tag)
-       
         return {'node': node_attribs, 'node_tags': tags}
-       
     elif element.tag == 'way':
         for attrib in element.attrib:
             if attrib in WAY_FIELDS:
                 way_attribs[attrib] = element.attrib[attrib]
-       
         position = 0
         for child in element:
             way_tag = {}
             way_node = {}
-           
             if child.tag == 'tag':
                 if LOWER_COLON.match(child.attrib['k']):
                     way_tag['type'] = child.attrib['k'].split(':',1)[0]
@@ -100,21 +88,18 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                     tags.append(way_tag)
                 elif PROBLEMCHARS.match(child.attrib['k']):
                     continue
-
                 else:
                     way_tag['type'] = 'regular'
                     way_tag['key'] = child.attrib['k']
                     way_tag['id'] = element.attrib['id']
                     way_tag['value'] = fix_streets(child.attrib['v'])
                     tags.append(way_tag)
-                   
             elif child.tag == 'nd':
                 way_node['id'] = element.attrib['id']
                 way_node['node_id'] = child.attrib['ref']
                 way_node['position'] = position
                 position += 1
                 way_nodes.append(way_node)
-
         return {'way': way_attribs, 'way_nodes': way_nodes, 'way_tags': tags}
     print tags
  
