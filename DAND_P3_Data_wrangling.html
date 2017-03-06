@@ -11770,6 +11770,7 @@ vilniusmap.osm - 177,989 Kb</p>
 <li>importtosql.py - The file that contains the code to import contents from CSV file to database.</li>
 <li>TagTypes.py - Auditing file to check the types of tags, also checks for problems in those tags.</li>
 <li>audit.py - Auditing file to check all of the bad street types that I will have to fix.</li>
+<li>Auditpostcodes.py - Auditing post codes to check if it has LT- prefix.</li>
 </ul>
 
 </div>
@@ -11789,6 +11790,10 @@ vilniusmap.osm - 177,989 Kb</p>
 <li>After printing some of the tags, I found that some of the street values consists of shortened street types. For example g. should mean gatvė in Lithuanian. I created a python script to audit it and check for the street types to let me know what street types I will need to change later in the data.py file. I will explain how I fixed it later in the document. </li>
 </ul>
 <p><img src="http://i.imgur.com/5IdBF8h.png"></p>
+<ul>
+<li>I wanted to check if the post codes in my data set is in correct format. (The correct format for Lithuanian post codes are Symbols 'LT-' + five numbers according to this wikipedia page <a href="https://lt.wikipedia.org/wiki/ISO_3166-2">https://lt.wikipedia.org/wiki/ISO_3166-2</a>). I wrote a script called Auditpostcodes.py to check for problematic post codes that doesn't include LT in front. I got the following results:  </li>
+</ul>
+<p><img src="http://puu.sh/uwnF8/33b0589be4.png"></p>
 <ul>
 <li>I could not import my data to sqlite3 database manualy. All I got was this error <code>INSERT failed: UNIQUE constraint failed.</code> That could have been because of special lithuanian characters like ė, ą, ų etc. in my data. I found out that on of the solutions was to create a python script to import the data to the database.</li>
 </ul>
@@ -11883,6 +11888,24 @@ vilniusmap.osm - 177,989 Kb</p>
         <span class="k">return</span> <span class="n">attribute</span>
 </pre></div>
 <p>Fixing this resulted in cleaner data for my street types.</p>
+
+</div>
+</div>
+</div>
+<div class="cell border-box-sizing text_cell rendered">
+<div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h3 id="Fixing-post-codes.">Fixing post codes.<a class="anchor-link" href="#Fixing-post-codes.">&#182;</a></h3><p>To audit the data set I wrote a script to look for matching values against 2 regexes: LT[-\s]\d{5}) and (^[0-9]{5}$). After getting the results I saw that I need to fix about 1990 values. To do so I changed my "fix_values" function in data.py file, so that it checks if child.attrib['v'] matches my regex pattern and if it does, it adds 'LT-' in front of it.</p>
+
+<pre><code>POST_CODE = re.compile(r'^[0-9]{5}$')  
+
+elif POST_CODE.match(attribute):
+return attribute.replace(attribute, 'LT-' + attribute)
+
+</code></pre>
+<p>This fixed my postcodes to match Lithuanian standarts.</p>
 
 </div>
 </div>

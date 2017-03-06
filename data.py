@@ -20,9 +20,11 @@ WAYS_PATH = "ways.csv"
 WAY_NODES_PATH = "ways_nodes.csv"
 WAY_TAGS_PATH = "ways_tags.csv"
 
+
 #Created regex variables to match my values to
 LOWER_COLON = re.compile(r'^([a-z]|_)+:([a-z]|_)+')
 PROBLEMCHARS = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
+POST_CODE = re.compile(r'^[0-9]{5}$')
 FIND_GATVE = re.compile(r'(.*?)\sg\.$')
 FIND_ALEJA = re.compile(r'(.*?)\s\bal\b.$')
 FIND_AIKSTE = re.compile(r'(.*?)\sa\.$')
@@ -31,7 +33,7 @@ FIND_KELIAS = re.compile(r'(.*?)\s\bkel\b.$')
 FIND_PLENTAS = re.compile(r'(.*?)\s\bpl\b.$')
 FIND_PROSPEKTAS = re.compile(r'(.*?)\s\bpr\b.$')
 FIND_SKERSGATVIS = re.compile(r'(.*?)\s\bskg\b.$')
- 
+
 SCHEMA = schema.schema
  
 # Make sure the fields order in the csvs matches the column order in the sql table schema
@@ -59,15 +61,16 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                 node_tag['type'] = child.attrib['k'].split(':',1)[0]
                 node_tag['key'] = child.attrib['k'].split(':',1)[1]
                 node_tag['id'] = element.attrib['id']
-                node_tag['value'] = fix_streets(child.attrib['v']) #References helper function that fixes streets
+                node_tag['value'] = fix_values(child.attrib['v']) #References helper function that fixes streets
                 tags.append(node_tag)
+
             elif PROBLEMCHARS.match(child.attrib['k']): #If there are problemchars in the child attribute, then skip it.
                 continue
             else:
                 node_tag['type'] = 'regular'
                 node_tag['key'] = child.attrib['k']
                 node_tag['id'] = element.attrib['id']
-                node_tag['value'] = fix_streets(child.attrib['v'])
+                node_tag['value'] = fix_values(child.attrib['v'])
                 tags.append(node_tag)
         return {'node': node_attribs, 'node_tags': tags}
     elif element.tag == 'way':
@@ -83,8 +86,8 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                     way_tag['type'] = child.attrib['k'].split(':',1)[0]
                     way_tag['key'] = child.attrib['k'].split(':',1)[1]
                     way_tag['id'] = element.attrib['id']
-                    way_tag['value'] = fix_streets(child.attrib['v'])
-                    print way_tag['value'] #Checking if it works
+                    way_tag['value'] = fix_values(child.attrib['v'])
+
                     tags.append(way_tag)
                 elif PROBLEMCHARS.match(child.attrib['k']):
                     continue
@@ -92,7 +95,7 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
                     way_tag['type'] = 'regular'
                     way_tag['key'] = child.attrib['k']
                     way_tag['id'] = element.attrib['id']
-                    way_tag['value'] = fix_streets(child.attrib['v'])
+                    way_tag['value'] = fix_values(child.attrib['v'])
                     tags.append(way_tag)
             elif child.tag == 'nd':
                 way_node['id'] = element.attrib['id']
@@ -108,7 +111,8 @@ def shape_element(element, node_attr_fields=NODE_FIELDS, way_attr_fields=WAY_FIE
 #               Helper Functions                     #
 # ================================================== #
 #This function takes an attribute of a node, of way, then checks it against RegEx and if it matches, it will replace the words.
-def fix_streets(attribute):
+def fix_values(attribute):
+
     if FIND_GATVE.match(attribute):
         return attribute.replace('g.', 'gatvė'.decode("utf-8"))
     elif FIND_ALEJA.match(attribute):
@@ -125,8 +129,11 @@ def fix_streets(attribute):
         return attribute.replace('pr.', 'prospektas')
     elif FIND_SKERSGATVIS.match(attribute):
         return attribute.replace('skg.', 'skersgatvis')
+    elif POST_CODE.match(attribute):
+        return attribute.replace(attribute, 'LT-' + attribute)
     else:
         return attribute
+
 
 def get_element(osm_file, tags=('node', 'way', 'relation')):
     """Yield element if it is the right type of tag"""
